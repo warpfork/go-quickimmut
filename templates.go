@@ -109,7 +109,7 @@ type {{ .Name }}List struct {
 type {{ .Name }}ListBuilder {{ .Name }}List
 
 func {{ .Method -}} Make{{ .Name | upper }}List(ents ...{{ .ValueType }}) {{ .Name }}List {
-	return {{ .Name }}List{x}
+	return {{ .Name }}List{ents}
 }
 func {{ .Method -}} Start{{ .Name | upper }}List(sizeHint int) {{ .Name }}ListBuilder {
 	return {{ .Name }}ListBuilder{make([]{{ .ValueType }}, 0, sizeHint)}
