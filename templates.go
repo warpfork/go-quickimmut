@@ -102,6 +102,14 @@ func (li listInfo) Method() string {
 	return ""
 }
 
+// Templated form of https://play.golang.org/p/YMDuCUCrf-4 .
+//
+// The 'copy' is necessary because if invocation is of the `Fn(slice...)` form, Go passes the (mutable!) slice reference in.
+// The 'copy' call is less problematic than one might first expect, however,
+// because if the invocation is in varargs form, that slice doesn't escape (and thus we don't get multiple heap alloc costs).
+// (The need for the 'copy' becomes somewhat mooted if your value type is unexported (because a `[]unexported` can't be created outside your package),
+// but this generator tool accepts exported value types, and it's also darn hard to validate that no other slice references are leaked by your package,
+// so it seems reasonable to do this defense unconditionally.)
 var listTmpl = `
 type {{ .Name }}List struct {
 	x []{{ .ValueType }}
@@ -109,7 +117,9 @@ type {{ .Name }}List struct {
 type {{ .Name }}ListBuilder {{ .Name }}List
 
 func {{ .Method -}} Make{{ .Name | upper }}List(ents ...{{ .ValueType }}) {{ .Name }}List {
-	return {{ .Name }}List{ents}
+	x := make([]{{ .ValueType }}, len(ents))
+	copy(x, ents)
+	return {{ .Name }}List{x}
 }
 func {{ .Method -}} Start{{ .Name | upper }}List(sizeHint int) {{ .Name }}ListBuilder {
 	return {{ .Name }}ListBuilder{make([]{{ .ValueType }}, 0, sizeHint)}
