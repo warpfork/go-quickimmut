@@ -26,7 +26,7 @@ func (mi mapInfo) Name() string {
 	if mi.Visibility {
 		startCase = upper
 	}
-	return startCase(nostar(mi.KeyType)) + upper(nostar(mi.ValueType))
+	return startCase("map") + "__" + upper(nostar(mi.KeyType)) + "__" + upper(nostar(mi.ValueType))
 }
 func (mi mapInfo) Method() string {
 	if mi.AttachTo != "" {
@@ -41,35 +41,35 @@ func (mi mapInfo) Method() string {
 // Now, imagine how many more times "KeyType" and "ValueType" would've been repeated if I hadn't pre-templated them into "Name".
 // (Maybe the forthcoming generics would make this a bit better.  No idea.)
 var mapTmpl = `
-type {{ .Name }}Map struct {
+type {{ .Name }} struct {
 	x map[{{ .KeyType }}]{{ .ValueType }}
 }
-type {{ .Name }}Entry struct {
+type {{ .Name }}__Entry struct {
 	k {{ .KeyType }}
 	v {{ .ValueType }}
 }
-type {{ .Name }}MapBuilder {{ .Name }}Map
+type {{ .Name }}__Builder {{ .Name }}
 
-func {{ .Method -}} Make{{ .Name | upper }}Map(ents ...{{ .Name }}Entry) {{ .Name }}Map {
+func {{ .Method -}} Make{{ .Name | upper }}(ents ...{{ .Name }}__Entry) {{ .Name }} {
 	x := make(map[{{ .KeyType }}]{{ .ValueType }}, len(ents))
 	for _, y := range ents {
 		x[y.k] = y.v
 	}
-	return {{ .Name }}Map{x}
+	return {{ .Name }}{x}
 }
-func {{ .Method -}} Make{{ .Name | upper }}MapEntry(k {{ .KeyType }}, v {{ .ValueType }}) {{ .Name }}Entry {
-	return {{ .Name }}Entry{k, v}
+func {{ .Method -}} Make{{ .Name | upper }}__Entry(k {{ .KeyType }}, v {{ .ValueType }}) {{ .Name }}__Entry {
+	return {{ .Name }}__Entry{k, v}
 }
-func {{ .Method -}} Start{{ .Name | upper }}Map(sizeHint int) {{ .Name }}MapBuilder {
-	return {{ .Name }}MapBuilder{make(map[{{ .KeyType }}]{{ .ValueType }}, sizeHint)}
+func {{ .Method -}} Start{{ .Name | upper }}(sizeHint int) {{ .Name }}__Builder {
+	return {{ .Name }}__Builder{make(map[{{ .KeyType }}]{{ .ValueType }}, sizeHint)}
 }
-func (b *{{ .Name }}MapBuilder) Append(k {{ .KeyType }}, v {{ .ValueType }}) {
+func (b *{{ .Name }}__Builder) Append(k {{ .KeyType }}, v {{ .ValueType }}) {
 	b.x[k] = v
 }
-func (b *{{ .Name }}MapBuilder) Finish() {{ .Name }}Map {
+func (b *{{ .Name }}__Builder) Finish() {{ .Name }} {
 	v := *b
 	b.x = nil
-	return {{ .Name }}Map(v)
+	return {{ .Name }}(v)
 }
 `
 
@@ -93,7 +93,7 @@ func (li listInfo) Name() string {
 	if li.Visibility {
 		startCase = upper
 	}
-	return startCase(nostar(li.ValueType))
+	return startCase("list") + "__" + upper(nostar(li.ValueType))
 }
 func (li listInfo) Method() string {
 	if li.AttachTo != "" {
@@ -111,25 +111,25 @@ func (li listInfo) Method() string {
 // but this generator tool accepts exported value types, and it's also darn hard to validate that no other slice references are leaked by your package,
 // so it seems reasonable to do this defense unconditionally.)
 var listTmpl = `
-type {{ .Name }}List struct {
+type {{ .Name }} struct {
 	x []{{ .ValueType }}
 }
-type {{ .Name }}ListBuilder {{ .Name }}List
+type {{ .Name }}__Builder {{ .Name }}
 
-func {{ .Method -}} Make{{ .Name | upper }}List(ents ...{{ .ValueType }}) {{ .Name }}List {
+func {{ .Method -}} Make{{ .Name | upper }}(ents ...{{ .ValueType }}) {{ .Name }} {
 	x := make([]{{ .ValueType }}, len(ents))
 	copy(x, ents)
-	return {{ .Name }}List{x}
+	return {{ .Name }}{x}
 }
-func {{ .Method -}} Start{{ .Name | upper }}List(sizeHint int) {{ .Name }}ListBuilder {
-	return {{ .Name }}ListBuilder{make([]{{ .ValueType }}, 0, sizeHint)}
+func {{ .Method -}} Start{{ .Name | upper }}(sizeHint int) {{ .Name }}__Builder {
+	return {{ .Name }}__Builder{make([]{{ .ValueType }}, 0, sizeHint)}
 }
-func (b *{{ .Name }}ListBuilder) Append(v {{ .ValueType }}) {
+func (b *{{ .Name }}__Builder) Append(v {{ .ValueType }}) {
 	b.x = append(b.x, v)
 }
-func (b *{{ .Name }}ListBuilder) Finish() {{ .Name }}List {
+func (b *{{ .Name }}__Builder) Finish() {{ .Name }} {
 	v := *b
 	b.x = nil
-	return {{ .Name }}List(v)
+	return {{ .Name }}(v)
 }
 `
