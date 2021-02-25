@@ -51,6 +51,13 @@ One might argue that golang isn't really meant to be good at immutability.  One 
 Use it if it feels like it's going to help you.  Don't if it doesn't.
 
 
+Caveats
+-------
+
+- If you generate unexported types, you won't be able to represent the difference between a nil list and a zero-length list from outside the package.
+- Probably other things suck.  It's computers, I dunno.
+
+
 Generics?
 ---------
 
